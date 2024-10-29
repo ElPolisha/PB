@@ -1,34 +1,66 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
-namespace Library;
-
-public class Phonebook
+namespace Library
 {
-    private List<Contact> persons;
-
-    public Phonebook(Contact owner)
+    public class Phonebook
     {
-        this.Owner = owner;
-        this.persons = new List<Contact>();
-    }
+        private List<Contact> persons;
 
-    public Contact Owner { get; }
-
-    public List<Contact> Search(string[] names)
-    {
-        List<Contact> result = new List<Contact>();
-
-        foreach (Contact person in this.persons)
+        public Phonebook(Contact owner)
         {
-            foreach (string name in names)
+            Owner = owner;
+            persons = new List<Contact>();
+        }
+
+        public Contact Owner { get; }
+
+        public List<Contact> Search(string[] names)
+        {
+            return persons.Where(person => names.Contains(person.Name)).ToList();
+        }
+
+        public void DeleteContact(Contact contact)
+        {
+            if (persons.Contains(contact))
             {
-                if (person.Name.Equals(name))
-                {
-                    result.Add(person);
-                }
+                persons.Remove(contact);
             }
         }
 
-        return result;
+        public void AddContact(Contact contact)
+        {
+            if (!persons.Contains(contact))
+            {
+                persons.Add(contact);
+            }
+        }
+
+        public void SendMessage(string[] names, string text, IMessageChannel channel)
+        {
+            var contacts = Search(names);
+
+            foreach (var contact in contacts)
+            {
+                if (!string.IsNullOrEmpty(contact.Phone))
+                {
+                    var message = new Message(Owner.Phone, contact.Phone)
+                    {
+                        Text = text
+                    };
+
+                    try
+                    {
+                        channel.Send(message);
+                        Console.WriteLine("El mensaje ha sido enviado");
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("No se envió el mensaje");
+                    }
+                }
+            }
+        }
     }
 }
